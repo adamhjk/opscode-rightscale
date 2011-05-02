@@ -37,8 +37,10 @@ validation_client_name "#{ENV['OPSCODE_ORGANIZATION']}-validator"
 node_name "#{ENV['OPSCODE_NODE_NAME']}"
     EOH
   end
+  run_list = []
+  run_list = ENV['OPSCODE_INITIAL_RUN_LIST'].split(' ') if ENV['OPSCODE_INITIAL_RUN_LIST']
   File.open("/etc/chef/first-boot.json", "w") do |f|
-    f.print({ "run_list" => ENV['OPSCODE_INITIAL_RUN_LIST'].split(' '), "rightscale" => { "server_name" => ENV["RSSERVER_NAME"], "deployment" => ENV["RSDEPLOYMENT_NAME"], "server_template" => ENV['RSSERVER_TEMPLATE_NAME'] } }.to_json)
+    f.print({ "run_list" => run_list, "rightscale" => { "server_name" => ENV["RSSERVER_NAME"], "deployment" => ENV["RSDEPLOYMENT_NAME"], "server_template" => ENV['RSSERVER_TEMPLATE_NAME'] } }.to_json)
   end
 end
 
