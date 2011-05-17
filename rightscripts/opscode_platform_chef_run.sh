@@ -17,5 +17,10 @@
 # limitations under the License.
 #
 
-/usr/bin/chef-client
+if [ -e /usr/bin/chef-client ]
+then
+  /usr/bin/chef-client
+else
+  echo "This node is not connected to Opscode, not running chef client."
+fi
 

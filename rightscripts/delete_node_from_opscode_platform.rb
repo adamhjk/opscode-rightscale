@@ -17,25 +17,29 @@
 # limitations under the License.
 #
 
-require 'rubygems'
-require 'chef'
-require 'chef/knife'
-require 'chef/knife/node_delete'
-require 'chef/knife/client_delete'
+if File.exists?("/etc/chef/client.rb") && File.exists?("/usr/bin/chef-client")
+  require 'rubygems'
+  require 'chef'
+  require 'chef/knife'
+  require 'chef/knife/node_delete'
+  require 'chef/knife/client_delete'
 
-Chef::Config.from_file("/etc/chef/client.rb")
+  Chef::Config.from_file("/etc/chef/client.rb")
 
-nd = Chef::Knife::NodeDelete.new
-nd.name_args = [ Chef::Config[:node_name] ]
-nd.config[:yes] = true
-nd.run
+  nd = Chef::Knife::NodeDelete.new
+  nd.name_args = [ Chef::Config[:node_name] ]
+  nd.config[:yes] = true
+  nd.run
 
-cd = Chef::Knife::ClientDelete.new
-cd.name_args = [ Chef::Config[:node_name] ]
-cd.config[:yes] = true
-cd.run
+  cd = Chef::Knife::ClientDelete.new
+  cd.name_args = [ Chef::Config[:node_name] ]
+  cd.config[:yes] = true
+  cd.run
 
-File.unlink("/etc/chef/client.pem")
+  File.unlink("/etc/chef/client.pem")
+else
+  puts "This node is not connected to Opscode, no need to delete node."
+end
 
 exit 0
 
