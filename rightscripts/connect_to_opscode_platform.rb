@@ -48,8 +48,14 @@ node_name "#{ENV['OPSCODE_NODE_NAME']}"
   end
   run_list = []
   run_list = ENV['OPSCODE_INITIAL_RUN_LIST'].split(' ') if ENV['OPSCODE_INITIAL_RUN_LIST']
+
+  # Fetch the existing RightScale node attributes, in particular the monitoring server(s)
+  attr_json = File.open('/etc/rightscale.d/chef.js','r').read
+  attr_obj = JSON.parse(attr_json)
+  rs_attrs = attr_obj['attributes']['rightscale']
+
   File.open("/etc/chef/first-boot.json", "w") do |f|
-    f.print({ "run_list" => run_list, "rightscale" => { "server_name" => server_name, "deployment" => deployment, "server_template" => server_template } }.to_json)
+    f.print({ "run_list" => run_list, "rightscale" => rs_attrs.merge({ "server_name" => server_name, "deployment" => deployment, "server_template" => server_template }) }.to_json)
   end
 end
 
