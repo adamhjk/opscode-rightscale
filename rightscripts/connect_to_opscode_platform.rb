@@ -27,9 +27,9 @@ system("gem install json")
 require 'rubygems'
 require 'json'
 
-server_name     = ENV['RSSERVER_NAME']          || "n/a"
-deployment      = ENV['RSDEPLOYMENT_NAME']      || "n/a"
-server_template = ENV['RSSERVER_TEMPLATE_NAME'] || "n/a"
+server_name     = ENV['RS_SERVER_NAME']          || "n/a"
+deployment      = ENV['RS_DEPLOYMENT_NAME']      || "n/a"
+server_template = ENV['RS_SERVER_TEMPLATE_NAME'] || "n/a"
 
 unless File.exists?("/usr/bin/chef-client")
   system("gem install chef ohai --no-rdoc --no-ri --verbose") unless File.exists?("/usr/bin/chef-client")
@@ -49,13 +49,25 @@ node_name "#{ENV['OPSCODE_NODE_NAME']}"
   run_list = []
   run_list = ENV['OPSCODE_INITIAL_RUN_LIST'].split(' ') if ENV['OPSCODE_INITIAL_RUN_LIST']
 
-  # Fetch the existing RightScale node attributes, in particular the monitoring server(s)
-  attr_json = File.open('/etc/rightscale.d/chef.js','r').read
-  attr_obj = JSON.parse(attr_json)
-  rs_attrs = attr_obj['attributes']['rightscale']
+  rs_attrs = {
+    "instance_uuid" => ENV['RS_INSTANCE_UUID'],
+    "servers" => {
+      "sketchy" => {
+        "hostname" => ENV['RS_SKETCHY'],
+        "identifier" => ENV['RS_INSTANCE_UUID']
+      },
+      "lumberjack" => {
+        "hostname" => ENV['RS_SYSLOG'],
+        "identifier" => ENV['RS_INSTANCE_UUID']
+      }
+    },
+    "server_name" => server_name,
+    "deployment" => deployment,
+    "server_template" => server_template
+  }
 
   File.open("/etc/chef/first-boot.json", "w") do |f|
-    f.print({ "run_list" => run_list, "rightscale" => rs_attrs.merge({ "server_name" => server_name, "deployment" => deployment, "server_template" => server_template }) }.to_json)
+    f.print({ "run_list" => run_list, "rightscale" => rs_attrs }.to_json)
   end
 end
 
