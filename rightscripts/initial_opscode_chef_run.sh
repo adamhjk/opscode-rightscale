@@ -17,5 +17,10 @@
 # limitations under the License.
 #
 
-/usr/bin/chef-client -j /etc/chef/first-boot.json && rm /etc/chef/validation.pem
+if [ -e /usr/bin/chef-client ]
+then
+  /usr/bin/chef-client -j /etc/chef/first-boot.json && rm /etc/chef/validation.pem
+else
+  echo "This node is not connected to Opscode, not running chef client."
+fi
 

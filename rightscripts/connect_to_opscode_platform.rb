@@ -17,10 +17,19 @@
 # limitations under the License.
 #
 
+if !ENV['OPSCODE_ORGANIZATION'] || !ENV['OPSCODE_NODE_NAME'] || !ENV['OPSCODE_VALIDATION_KEY']
+  puts "One of the required fields (OPSCODE_ORGANIZATION, OPSCODE_NODE_NAME, OPSCODE_VALIDATION_KEY) was missing, skipping connection to Opscode platform..."
+  exit 0
+end
+
 system("gem install json")
 
 require 'rubygems'
 require 'json'
+
+server_name     = ENV['RS_SERVER_NAME']          || "n/a"
+deployment      = ENV['RS_DEPLOYMENT_NAME']      || "n/a"
+server_template = ENV['RS_SERVER_TEMPLATE_NAME'] || "n/a"
 
 unless File.exists?("/usr/bin/chef-client")
   system("gem install chef ohai --no-rdoc --no-ri --verbose") unless File.exists?("/usr/bin/chef-client")
@@ -39,8 +48,26 @@ node_name "#{ENV['OPSCODE_NODE_NAME']}"
   end
   run_list = []
   run_list = ENV['OPSCODE_INITIAL_RUN_LIST'].split(' ') if ENV['OPSCODE_INITIAL_RUN_LIST']
+
+  rs_attrs = {
+    "instance_uuid" => ENV['RS_INSTANCE_UUID'],
+    "servers" => {
+      "sketchy" => {
+        "hostname" => ENV['RS_SKETCHY'],
+        "identifier" => ENV['RS_INSTANCE_UUID']
+      },
+      "lumberjack" => {
+        "hostname" => ENV['RS_SYSLOG'],
+        "identifier" => ENV['RS_INSTANCE_UUID']
+      }
+    },
+    "server_name" => server_name,
+    "deployment" => deployment,
+    "server_template" => server_template
+  }
+
   File.open("/etc/chef/first-boot.json", "w") do |f|
-    f.print({ "run_list" => run_list, "rightscale" => { "server_name" => ENV["RSSERVER_NAME"], "deployment" => ENV["RSDEPLOYMENT_NAME"], "server_template" => ENV['RSSERVER_TEMPLATE_NAME'] } }.to_json)
+    f.print({ "run_list" => run_list, "rightscale" => rs_attrs }.to_json)
   end
 end
 
